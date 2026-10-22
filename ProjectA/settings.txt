@@ -1,0 +1,4 @@
+DiskA DiskC
+DiskC /home/adergham/ProjectA/diskc.img 0 63 255 1000
+ROM resource/bios.bin
+VideoROM resource/vgabios.bin
