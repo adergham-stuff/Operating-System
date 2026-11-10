@@ -13,7 +13,8 @@ void readFile(char*, char*, int*);
 void executeProgram(char*);
 void terminate();
 void handleInterrupt21(int, int, int, int);
-void readSector(char*, int);
+void writeSector(char*, int);
+void deleteFile(char* filename);
 
 int main()
 {
@@ -211,7 +212,9 @@ void handleInterrupt21(int ax, int bx, int cx, int dx)
     else if (ax == 5)
         terminate();
     else if (ax == 6)
-        readSector((char*)bx, cx);
+        writeSector((char*)bx, cx);
+    else if (ax == 7)
+        deleteFile((char*)bx);
     else
     {
         printChar('B'); printChar('a'); printChar('d'); printChar(' ');
@@ -221,11 +224,75 @@ void handleInterrupt21(int ax, int bx, int cx, int dx)
     }
 }
 
-
-void readSector(char* buffer, int sector)
+/* Write the contents of buffer to the specified disk sector. */
+void writeSector(char* buffer, int sector)
 {
-    int ax = 3 * 256 + 1;           /* AH=3 (read), AL=1 sector */
+    int ax = 3 * 256 + 1;            /* AH=3 (write), AL=1 sector */
     int cx = 0 * 256 + (sector + 1);/* CH=track 0, CL=relative sector */
     int dx = 0 * 256 + 0x80;        /* DH=head 0, DL=hard disk */
     interrupt(0x13, ax, buffer, cx, dx);
+}
+
+/* Find the file called `filename` and delete it.
+ * Free its sectors in the disk map and remove its directory entry. */
+void deleteFile(char* filename)
+{
+    char map[512];
+    char directory[512];
+    int i;
+    int j;
+    int k;
+    int match;
+    int sector;
+
+    /* Read disk map and directory */
+    readSector(map, 1);
+    readSector(directory, 2);
+
+    /* Check each directory entry */
+    for (i = 0; i < 512; i = i + 32)
+    {
+        /* Skip empty or deleted files */
+        if (directory[i] == '\0')
+            continue;
+
+        match = 1;
+
+        /* Compare filenames */
+        for (j = 0; j < 6; j++)
+        {
+            if (filename[j] != directory[i + j])
+            {
+                match = 0;
+                break;
+            }
+
+            if (filename[j] == '\0')
+                break;
+        }
+
+        /* Skip files that don't match */
+        if (match == 0)
+            continue;
+
+        /* Free the file's sectors */
+        for (k = 0; k < 26; k++)
+        {
+            sector = directory[i + 6 + k] & 0xFF;
+
+            if (sector == 0)
+                break;
+
+            map[sector] = 0;
+        }
+
+        /* Mark the file as deleted */
+        directory[i] = '\0';
+
+        /* Save updated map and directory */
+        writeSector(map, 1);
+        writeSector(directory, 2);
+
+        return;
+    }
 }
