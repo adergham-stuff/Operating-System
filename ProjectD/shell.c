@@ -8,6 +8,7 @@
 void print(char*);
 int  isCommand(char*, char*);
 int  getFileName(char*, int, char*);
+void dir();
 
 int main()
 {
@@ -50,6 +51,10 @@ int main()
             }
             syscall(4, name, 0, 0);     /* only returns if it failed */
             print("Program not found\r\n");
+        }
+        else if (isCommand(line, "dir"))
+        {
+            dir();
         }
         else
             print("Bad Command!\r\n");
@@ -94,4 +99,35 @@ int getFileName(char* line, int start, char* name)
     }
     name[n] = 0;
     return n;
+}
+
+void dir()
+{
+    char directory[512];
+    char filename[7];
+    int i;
+    int j;
+
+    /* Read directory from sector 2 */
+    syscall(2, directory, 2, 0);
+
+    /* Check each 32-byte directory entry */
+    for (i = 0; i < 512; i = i + 32)
+    {
+        /* Skip deleted files */
+        if (directory[i] != '\0')
+        {
+            /* Copy filename which is stored in 6 bytes*/
+            for (j = 0; j < 6; j++)
+            {
+                filename[j] = directory[i + j];
+            }
+
+            filename[6] = '\0';
+
+            /* Print filename */
+            print(filename);
+            print("\r\n");
+        }
+    }
 }

@@ -13,6 +13,7 @@ void readFile(char*, char*, int*);
 void executeProgram(char*);
 void terminate();
 void handleInterrupt21(int, int, int, int);
+void readSector(char*, int);
 
 int main()
 {
@@ -209,6 +210,8 @@ void handleInterrupt21(int ax, int bx, int cx, int dx)
         executeProgram((char*)bx);
     else if (ax == 5)
         terminate();
+    else if (ax == 6)
+        readSector((char*)bx, cx);
     else
     {
         printChar('B'); printChar('a'); printChar('d'); printChar(' ');
@@ -216,4 +219,13 @@ void handleInterrupt21(int ax, int bx, int cx, int dx)
         printChar('a'); printChar('l'); printChar('l');
         printChar('\r'); printChar('\n');
     }
+}
+
+
+void readSector(char* buffer, int sector)
+{
+    int ax = 3 * 256 + 1;           /* AH=3 (read), AL=1 sector */
+    int cx = 0 * 256 + (sector + 1);/* CH=track 0, CL=relative sector */
+    int dx = 0 * 256 + 0x80;        /* DH=head 0, DL=hard disk */
+    interrupt(0x13, ax, buffer, cx, dx);
 }
