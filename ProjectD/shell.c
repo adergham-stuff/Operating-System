@@ -14,6 +14,7 @@ int  getSecondName(char*, int, char*);
 void dir();
 void create(char*, char*);
 
+
 int main()
 {
     char line[80];
@@ -222,7 +223,7 @@ void create(char* name, char* textBuf)
 
     if (pos > 0)
     {
-        sectors = pos / 512 + 1;            /* use your div helper if / isn't available */
+        sectors = (pos / 511) /512;            /* use your div helper if / isn't available */
         syscall(8, textBuf, name, sectors);
     }
 }
