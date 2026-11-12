@@ -296,3 +296,53 @@ void deleteFile(char* filename)
         return;
     }
 }
+
+void writeFile(char* buffer, char* filename, int numberOfSectors){
+    char map[512];
+    char dir[512];
+    char sectorBuf[512];
+    int entry, i, j, sector, namefinish;
+   
+    readSector(map, 1);
+    readSector(dir,2);
+
+
+    for (entry =0; entry < 16; entry++)
+        if (dir[entry * 32] == '\0') {break;}
+    if (entry == 16) {return;}
+
+
+    namefinish = 0;
+    for(i = 0; i<6; i++) {
+        if (!namefinish && filename[i] != '\0')
+            dir[entry *32 +i] = filename[i];
+        else {
+            namefinish = 1;
+            dir[entry * 32 + i] = '\0';
+        }
+    }
+   
+    for (j =0; j <numberOfSectors; j++){
+        for (sector = 3; sector < 256; sector++)
+            if(map[sector] == 0) {break;}
+        if(sector == 256) {return;}
+
+
+        map[sector] = 0xFF;
+        dir[entry * 32 + 6 +j] = sector;
+
+
+        for(i =0; i<512; i++)
+            sectorBuf[i] = buffer[j * 512 + i];
+        writeSector(sectorBuf,sector);
+    }
+
+
+    for(j = numberOfSectors; j<26;j++)
+        dir[entry * 32 +6 +j] =0;
+
+
+    writeSector(map, 1);
+    writeSector(dir,2);
+    
+}
