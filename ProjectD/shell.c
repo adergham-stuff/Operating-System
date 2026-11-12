@@ -223,7 +223,7 @@ void create(char* name, char* textBuf)
 
     if (pos > 0)
     {
-        sectors = (pos / 511) /512;            /* use your div helper if / isn't available */
+        sectors = (pos + 511) /512;            /* use your div helper if / isn't available */
         syscall(8, textBuf, name, sectors);
     }
 }
