@@ -216,7 +216,7 @@ void handleInterrupt21(int ax, int bx, int cx, int dx)
         writeSector((char*)bx, cx);
     else if (ax == 7)
         deleteFile((char*)bx);
-    else if(ax == 8)
+    else if (ax == 8)
         writeFile((char*)bx, (char*)cx, dx);
     else
     {
